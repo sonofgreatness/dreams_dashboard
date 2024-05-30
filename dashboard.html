@@ -39,10 +39,80 @@
 <!-- Search bar-->
 
 
+
+  <main class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8"
  
-  <div id="excelData" class="max-w-lg mx-auto bg-white shadow-md p-6 rounded-md">
-      <!--Data will be displayed here -->
+  >
+    <!-- CARDS-->
+    <div class="flex overflow-x-auto pb-6">
+        <!-- Card 1 -->
+        <div class="flex-shrink-0 w-full md:w-64 border rounded-lg overflow-hidden mx-2 bg-white shadow-lg
+        transform transition duration-500 ease-in-out hover:-translate-y-1 hover:scale-110">
+            <div class="p-4 text-gray-900">
+                <h5 class="text-2xl font-bold">Title 1</h5>
+                <p class="text-3xl">Body 1</p>
+                <p class="text-sm text-gray-700">Foot 1</p>
+            </div>
+        </div>
+        <!-- Card 2 -->
+        <div class="flex-shrink-0 w-full md:w-64 border rounded-lg overflow-hidden mx-2 bg-white shadow-lg 
+        transform transition duration-500 ease-in-out hover:-translate-y-1 hover:scale-110">
+            <div class="p-4 text-gray-900">
+                <h5 class="text-2xl font-bold">Title 2</h5>
+                <p class="text-3xl">Body 2</p>
+                <p class="text-sm text-gray-700">Foot 2</p>
+            </div>
+        </div>
+        <!-- Add more cards as needed -->
+    <!-- Card 3 -->
+             <div class="flex-shrink-0 w-full md:w-64 border rounded-lg overflow-hidden mx-2 bg-white shadow-lg
+             transform transition duration-500 ease-in-out hover:-translate-y-1 hover:scale-110">
+            <div class="p-4 text-gray-900">
+                <h5 class="text-2xl font-bold">Title 3</h5>
+                <p class="text-3xl">Body 3</p>
+                <p class="text-sm text-gray-700">Foot 3</p>
+            </div>
+        </div>
+    </div>
+    <!--CARDS-->   
+</main>
+<status>
+<div style="display: flex; justify-content: center;">
+  <div class="flex-shrink-0 w-full md:w-64 border rounded-lg overflow-hidden mx-2 bg-white shadow-lg
+               transform transition duration-500 ease-in-out hover:-translate-y-1 hover:scale-110">
+               <div class="p-4 text-gray-900">
+                <h5 class="text-2xl font-bold">Status of dataset</h5>
+                </div>       
+      <div class="p-4 text-gray-900" style="display: flex; align-items: center;">
+          <p style="flex-grow: 1; text-align: left;">Your Text</p>
+          <i class="icon-class" style="text-align: right;">🔍</i> <!-- Replace 'icon-class' with the class of your desired icon -->
+      </div>
   </div>
+</div>
+</status>
+<!---Table 2-->
+<div class="w-full border rounded-lg overflow-hidden mx-2 bg-white shadow-lg">
+  <div class="p-4 text-gray-900">
+      <h5 class="text-2xl font-bold">Summary</h5>
+      <table class="text-3xl">
+          <thead>
+              <tr>
+                  <th class="text-left text-gray-300">Field</th>
+                  <th class="text-right text-gray-500">Total</th>
+                  <th class=" text-right text-gray-300">%invalid</th>
+              </tr>
+          </thead>
+          <tbody  id="tableBody">
+          </tbody>
+      </table>
+  </div>
+</div>
+<!---Table 2-->
+
+
+
+<div   id="excelData"> 
+</div>
     <text>Dashboard</text>
     <input type="file" id="excelFileInput">
     <ul id="sheetNamesList"></ul>
@@ -256,7 +326,140 @@ THIS CLASS MANAGES  Table
   +getters 
 --*/
 class SummaryTable{
+  constructor (file){
+    console.log('summary constructor called');
+    var excelToJson = new ExcelToJSON();
+    /*populate dataCards with Statistics sheets data*/
+    let _dataCards = excelToJson.parseExcelToSheetNames(file,(sheetNames,sheetData) => {
+       this.displayData(sheetNames,sheetData);
+    });     
+    // sheetNames
+    this.getSheetNames = function() {
+    return this._dataCardsNames;};
+    //attributeCards
+    let _attributeCards = function(file){
+    }
+    // Function to extract values for specified key
+  };
 
+
+
+
+/* Displays Attribute Cards 
+@param sheetNames : List<String>
+@param sheetData : 
+*/
+displayData(sheetNames, sheetData) {
+
+var sheetNames2 = this.removeDuplicates(sheetNames); 
+var sheetNames3 = this.removeFirstAndLast(sheetNames2);//useful for downloadables
+var sheetKeys =  this.extractKeysFromSheetData(sheetData);
+
+var attributeCards = this.createAttributeCardsFromSheetNames(sheetKeys, sheetData); 
+
+
+let tableBody = document.getElementById('tableBody');
+
+// Populate the table with the AttributeCard objects
+attributeCards.forEach((card) => {
+    let row = document.createElement('tr');
+    row.className = 'border-dotted border-t border-gray-200';
+
+    let fieldCell = document.createElement('td');
+    fieldCell.className = 'text-left text-2xl';
+    fieldCell.textContent = card.faultyattributeName;
+
+    let totalCell = document.createElement('td');
+    totalCell.className = 'text-right text-2xl';
+    totalCell.textContent = card.numberOfRecordsWithFaultyAttribute;
+
+    let invalidCell = document.createElement('td');
+    invalidCell.className = 'text-right text-2xl';
+    invalidCell.textContent = card.percentageOfRecordsInError;
+
+    row.appendChild(fieldCell);
+    row.appendChild(totalCell);
+    row.appendChild(invalidCell);
+    tableBody.appendChild(row);
+});
+}
+  /**
+   * removes duplicates entries in Json Array 
+  */
+  removeDuplicates(jsonArray) {
+  return jsonArray.filter((item, index) => {
+      const itemJson = JSON.stringify(item);
+      return index === jsonArray.findIndex(obj => JSON.stringify(obj) === itemJson);
+  });
+}
+/*
+* removes first and last element in Json Array 
+*/
+removeFirstAndLast(array) {
+  if (array.length >= 2) {
+      array.shift(); // Removes the first element
+      array.pop(); // Removes the last element
+  }
+  return array;
+}
+
+
+/**
+*Creates a List<AttributeCard> Objects  by filtering sheetData for 
+* particular attributes namely 
+*                      No Old Person Case ID
+*                      No Old Person Case ID Percentage
+                      Invalid National ID
+                      Invalid National ID Percentage
+                      Invalid DOB
+                      Invalid DOB Percentage
+                      Social Assets Yes, No Completio
+                      Social Assets Yes, No Completio Percentange
+                      Unusable Records
+                      Unusable Records Percentage
+*/
+createAttributeCardsFromSheetNames(sheetNames3, sheetData){
+console.log(extractValues(sheetData, sheetNames3));
+return this.extractValues(sheetData, sheetNames3); 
+}
+
+extractValues(sheetData, sheetNames) {
+  let result = [];
+  let  mainList = sheetData[0];
+  for (let i = 0; i < sheetNames.length; i++) {
+    let max = sheetNames.length - 5;
+      let key = sheetNames[i];  
+      let nextKey = sheetNames[i+ 1];   
+      if ((mainList).hasOwnProperty(key)) {
+        console.log("extractValues pass"); 
+        console.log(key); 
+          let faultyattributeName = key;
+          let numberOfRecordsWithFaultyAttribute = mainList[key];
+          var percentageOfRecordsInError;
+          console.log(numberOfRecordsWithFaultyAttribute);
+          if (i  < max ){
+          percentageOfRecordsInError = mainList[nextKey]; // Assuming the percentage is not calculated
+            i= i+1;
+        }
+          else{
+          percentageOfRecordsInError = 0;
+          }
+          let myCard = new AttributeCard(faultyattributeName, numberOfRecordsWithFaultyAttribute, percentageOfRecordsInError);
+          result.push(myCard);
+      }
+  }
+  return result;
+}
+/*
+extracts names of wanted fields 
+*/
+extractKeysFromSheetData(sheetData){
+ var filtered = []; 
+ Object.keys(sheetData[0]).forEach(function(key) {
+             filtered.push(key)
+          });
+ return filtered;
+}
 }
 
         var ExcelToJSON = function() {
@@ -304,7 +507,7 @@ class SummaryTable{
         excelFileInput.addEventListener('change', function(event) {
             var file = event.target.files[0];
             console.log("loop");
-            const mainManager = new DataCardManager(file); 
+            const mainManager = new SummaryTable(file); 
             console.log("loop2");
         // Assuming mainManager.getSheetNames() returns a Promise
       console.log(mainManager.getSheetNames());
