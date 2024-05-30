@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.8.0/jszip.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.8.0/xlsx.js"></script>
+<body class="bg-gray-100 p-4">
+  <div id="excelData" class="max-w-lg mx-auto bg-white shadow-md p-6 rounded-md">
+      <!-- Data will be displayed here -->
+  </div>
+    <text>Dashboard</text>
+    <input type="file" id="excelFileInput">
+    <ul id="sheetNamesList"></ul>
+    <text id ="data"></text>
+    <script>
+
+
+// Function to extract values for specified keys
+function extractValues(obj, keys) {
+    const extractedValues = {};
+    keys.forEach(key => {
+        if (obj.hasOwnProperty(key)) {
+            extractedValues[key] = obj[key];
+        }
+    });
+    return extractedValues;
+}
+/*--
+THIS CLASS MANAGES  NavBar 
+  member variables 
+    +ipName: String 
+    +ipIconUrl : String
+
+  member functions 
+  +getters 
+--*/
+class NavigationBar{
+
+}
+
+/*--
+THIS CLASS MANAGES  CARDS 
+  member variables 
+    +faultyattributeName : String
+    +numberOfRecordsWithFaultyAttribute : Integer 
+    +pertangeofRecordsInError : Integer
+ 
+
+  member functions 
+  +getters 
+--*/
+class AttributeCard{
+  constructor(faultyattributeName, numberOfRecordsWithFaultyAttribute, percentageOfRecordsInError) {
+        this.faultyattributeName = faultyattributeName;
+        this.numberOfRecordsWithFaultyAttribute = numberOfRecordsWithFaultyAttribute;
+        this.percentageOfRecordsInError = percentageOfRecordsInError;
+    }
+}
+
+/*--
+THIS CLASS MANAGES  CARDS 
+  member variables 
+    +percentageError  : SInteger 
+    +statusOfDataSet : String
+    +icon: String 
+  member functions 
+  +getters 
+--*/
+class DataSetStatus{
+
+}
+/*--
+THIS CLASS MANAGES DATA CARDS 
+  member variables 
+     +dataCards : List<AttrributeCard>
+
+  member functions 
+  +getters
+  +getTotalofFaultyAttribute(faultyattributeName) : Integer
+  +getPercentangeOfFaultyAttribute(faultyattributeName)
+  +getExcelFileForFaultyAttr(faultyattributeName)
+--*/
+class DataCardManager{
+
+  constructor (file){
+    console.log('constructor called2');
+    var excelToJson = new ExcelToJSON();
+    /*populate dataCards with Statistics sheets data*/
+    let _dataCards = excelToJson.parseExcelToSheetNames(file,(sheetNames,sheetData) => {
+       this.displayData(sheetNames,sheetData);
+    });     
+    // sheetNames
+    this.getSheetNames = function() {
+    return this._dataCardsNames;};
+    //attributeCards
+    let _attributeCards = function(file){
+    }
+    // Function to extract values for specified keys
+  
+  };
+/* Displays Attribute Cards 
+@param sheetNames : List<String>
+@param sheetData : 
+*/
+displayData(sheetNames, sheetData) {
+
+  var sheetNames2 = this.removeDuplicates(sheetNames); 
+  var sheetNames3 = this.removeFirstAndLast(sheetNames2);//useful for downloadables
+  var sheetKeys =  this.extractKeysFromSheetData(sheetData);
+
+  var attributeCards = this.createAttributeCardsFromSheetNames(sheetKeys, sheetData); 
+  console.log("Data is coming"); 
+  //console.log(sheetKeys);   
+
+
+ 
+
+  var html = '<h2 class="text-xl font-semibold mb-4">Sheet Names:</h2>';
+            html += '<ul class="mb-4">';
+              sheetNames3.forEach(function(sheetName) {
+                html += '<li>' + sheetName + '</li>';
+            });
+            html += '</ul>';
+
+             html += '<h2 class="text-xl font-semibold mb-4">Sheet Data:</h2>';
+            html += '<table class="table-auto w-full">';
+            html += '<thead><tr>';
+            Object.keys(sheetData[0]).forEach(function(key) {
+                html += '<th class="px-4 py-2">' + key + '</th>';
+            });
+            html += '</tr></thead>';
+            html += '<tbody>';
+            sheetData.forEach(function(row) {
+                html += '<tr>';
+                Object.values(row).forEach(function(value) {
+                    html += '<td class="border px-4 py-2">' + value + '</td>';
+                });
+                html += '</tr>';
+            });
+            html += '</tbody></table>';
+                        document.getElementById('excelData').innerHTML = html;
+    }
+
+    /**
+     * removes duplicates entries in Json Array 
+    */
+    removeDuplicates(jsonArray) {
+    return jsonArray.filter((item, index) => {
+        const itemJson = JSON.stringify(item);
+        return index === jsonArray.findIndex(obj => JSON.stringify(obj) === itemJson);
+    });
+}
+
+/*
+* removes first and last element in Json Array 
+*/
+ removeFirstAndLast(array) {
+    if (array.length >= 2) {
+        array.shift(); // Removes the first element
+        array.pop(); // Removes the last element
+    }
+    return array;
+}
+
+
+/**
+ *Creates a List<AttributeCard> Objects  by filtering sheetData for 
+ * particular attributes namely 
+ *                      No Old Person Case ID
+ *                      No Old Person Case ID Percentage
+                        Invalid National ID
+                        Invalid National ID Percentage
+                        Invalid DOB
+                        Invalid DOB Percentage
+                        Social Assets Yes, No Completio
+                        Social Assets Yes, No Completio Percentange
+                        Unusable Records
+                        Unusable Records Percentage
+*/
+createAttributeCardsFromSheetNames(sheetNames3, sheetData){
+ console.log(extractValues(sheetData, sheetNames3));
+  return this.extractValues(sheetData, sheetNames3); 
+}
+
+extractValues(sheetData, sheetNames) {
+    let result = [];
+    let  mainList = sheetData[0];
+    for (let i = 0; i < sheetNames.length; i++) {
+        let key = sheetNames[i];    
+        if ((mainList).hasOwnProperty(key)) {
+          console.log("extractValues pass"); 
+          console.log(key); 
+            let faultyattributeName = key;
+            let numberOfRecordsWithFaultyAttribute = mainList[key];
+            console.log(numberOfRecordsWithFaultyAttribute);
+            let percentageOfRecordsInError = 0; // Assuming the percentage is not calculated
+            let myCard = new AttributeCard(faultyattributeName, numberOfRecordsWithFaultyAttribute, percentageOfRecordsInError);
+            result.push(myCard);
+        }
+    }
+    return result;
+}
+/*
+extracts names of wanted fields 
+*/
+extractKeysFromSheetData(sheetData){
+   var filtered = []; 
+   Object.keys(sheetData[0]).forEach(function(key) {
+               filtered.push(key)
+            });
+   return filtered;
+}
+ 
+}
+
+
+/*--
+THIS CLASS MANAGES  Table 
+  member variables 
+    +faultyattributeName : String 
+    +pertangeofRecordsInError : Integer
+    +totalRecordsWithFaultyAttribute : Integer 
+
+  member functions 
+  +getters 
+--*/
+class SummaryTable{
+
+}
+
+        var ExcelToJSON = function() {
+
+      this.parseExcelToSheetNames = function(file, callback) {
+      var reader = new FileReader();
+      var sheetNames = [];
+      reader.onload = function(e) {
+        var data = e.target.result;
+        var workbook = XLSX.read(data, { type: 'binary' });
+        workbook.SheetNames.forEach(function(sheetName) {
+            sheetNames.push(sheetName);
+            console.log("Sheet Name: ~~~~", sheetName);
+        });
+        workbook.SheetNames.forEach(function(sheetName) {
+                // Get sheet data
+                sheetNames.push(sheetName);   
+            });
+            workbook.SheetNames.forEach(function(sheetName) {
+                // Get sheet data
+                if(sheetName === 'Statistics'){
+                var sheetData = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
+                callback(sheetNames,sheetData); // Invoke the callback with sheetNames once they are fully populated
+              }    
+            });   
+         };
+
+    reader.onerror = function(ex) {
+        console.error('An error occurred while reading the file:', ex);
+        callback([]); // Invoke the callback with an empty list in case of an error
+    };
+    reader.readAsBinaryString(file);
+};
+};
+
+    /*
+        var excelFileInput = document.getElementById('results.xlsx'); // Replace with your actual file input element
+       var excelToJson = new ExcelToJSON();
+      excelFileInput.addEventListener('change', function(event) {
+      var file = event.target.files[0];
+       excelToJson.parseExcel(file)
+    }); */ 
+    var excelFileInput = document.getElementById('excelFileInput');
+        var excelToJson = new ExcelToJSON();
+        excelFileInput.addEventListener('change', function(event) {
+            var file = event.target.files[0];
+            console.log("loop");
+            const mainManager = new DataCardManager(file); 
+            console.log("loop2");
+        // Assuming mainManager.getSheetNames() returns a Promise
+      console.log(mainManager.getSheetNames());
+    });
+ /*STEPS 
+     1. Initialize all dataCards
+      2. Populate all dataCards
+        3. InitializeDataSetStatus
+         4. Initialize tableSummary */
+         
+        /*
+        reads xlsx file , and gets attributes from Statistics sheet
+        @returns list<AttrributeCard>
+        */
+</script>
+</body>
+</html>
